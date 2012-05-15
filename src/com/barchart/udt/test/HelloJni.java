@@ -15,6 +15,7 @@
  */
 package com.barchart.udt.test;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -49,13 +50,16 @@ public class HelloJni extends Activity
 		String Server_IP = "107.21.243.7";
 		int UDt_Server_Port=7000;
 
+		DataInputStream  dataIn = null; 
+		String Output = null;
+		
 		InetAddress UDT_server_IP=null;
 		StringBuffer buffer = null;
 		SocketUDT socket = null;
 		InetSocketAddress UDT_Server_Addr = null;
 
 		String  channelID = "123456789012";                      
-		String  macAddress = "000EA3070A55";//"000EA3070AC9";                      //macaddress of camera  
+		String  macAddress = "000EA3070A55";//"000EA3070AC9";  //macaddress of camera  
 		UDT_server_IP = InetAddress.getByName(Server_IP);
 
 		socket = new SocketUDT(TypeUDT.STREAM);
@@ -69,15 +73,41 @@ public class HelloJni extends Activity
 
 		socket.send(message.getBytes());
 
-		byte[] recvData = new byte[1000];
+		//socket.receive(recvData);
+		//Output = new String(recvData);		
 
-		socket.receive(recvData);
+		
+		
+		/*TEST skip 
+		byte[] recvData = new byte[1000];
+		dataIn = new DataInputStream(socket.getUDTInputStream());
+		dataIn.skipBytes(300);
+		dataIn.read(recvData);
+		Output = new String(recvData);	
+		Log.d("mbp","read bytearr After skip 300: "+ Output);*/
+		
+		
+		/*TEST READLINE 
+		dataIn = new DataInputStream(socket.getUDTInputStream());
+		Output = dataIn.readLine(); 
+		Log.d("mbp","readline: Output: "+ Output);
+		*/
+		
+		/*TEST read byte array*/
+		byte[] recvData = new byte[1000];
+		dataIn = new DataInputStream(socket.getUDTInputStream());
+		dataIn.read(recvData);
+		Output = new String(recvData);	
+		Log.d("mbp","read bytearr: Output: "+ Output);
+			/**/	
 
 		socket.close();
 
+		
 
-		String Output = null;
-		Output = new String(recvData);
+		
+
+		 
 
 		String []str = null, temp;
 		int Camera_status;

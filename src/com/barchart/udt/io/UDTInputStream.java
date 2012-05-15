@@ -1,5 +1,6 @@
 package com.barchart.udt.io;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -9,12 +10,15 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
+import android.util.Log;
+
 import com.barchart.udt.ExceptionUDT;
 import com.barchart.udt.SocketUDT;
 
 public class UDTInputStream extends InputStream {
 
-	private static final int PACKET_BUFFER_SIZE = 16*1024;
+	//private static final int PACKET_BUFFER_SIZE = 16*1024;
+	private static final int PACKET_BUFFER_SIZE = 64;
 
 	private SocketUDT dsock = null;
 	
@@ -51,7 +55,19 @@ public class UDTInputStream extends InputStream {
 
 	public int read() throws IOException {
 		if (packIdx == packSize) {
-			receive();
+			try 
+			{
+				receive();
+			}
+			catch (ExceptionUDT eudt)
+			{
+				//Connection Broken--- no more data
+				if (eudt.errorUDT.code == 2001 )
+				{
+					return -1;
+					
+				}
+			}
 		}
 
 		value = ddata[packIdx] & 0xff;
@@ -65,10 +81,24 @@ public class UDTInputStream extends InputStream {
 
 	public int read(byte[] buff, int off, int len) throws IOException {
 		if (packIdx == packSize) {
-			receive();
+			try 
+			{
+				receive();
+			}
+			catch (ExceptionUDT eudt)
+			{
+				//Connection Broken--- no more data
+				if (eudt.errorUDT.code == 2001 )
+				{
+					return -1;
+					
+				}
+			}
+			
 		}
 
 		int lenRemaining = len;
+		int readSofar = 0 ; 
 
 		while(available() < lenRemaining) {
 			System.arraycopy(ddata,
@@ -77,7 +107,22 @@ public class UDTInputStream extends InputStream {
 					off + (len - lenRemaining),
 					available());
 			lenRemaining -= available();
-			receive();
+			
+			readSofar += available();
+			try 
+			{
+				receive();
+			}
+			catch (ExceptionUDT eudt)
+			{
+				//Connection Broken--- no more data
+				if (eudt.errorUDT.code == 2001 )
+				{
+					return readSofar ;
+					
+				}
+			}
+			
 		}
 
 		System.arraycopy(ddata,
@@ -90,14 +135,40 @@ public class UDTInputStream extends InputStream {
 	}
 	public long skip(long len) throws IOException {
 		if (packIdx == packSize) {
-			receive();
+			try 
+			{
+				receive();
+			}
+			catch (ExceptionUDT eudt)
+			{
+				//Connection Broken--- no more data
+				if (eudt.errorUDT.code == 2001 )
+				{
+					return 0;
+					
+				}
+			}
 		}
 
 		long lenRemaining = len;
+		int skipSofar = 0 ; 
 
 		while(available() < lenRemaining) {
 			lenRemaining -= available();
-			receive();
+			skipSofar += available();
+			try 
+			{
+				receive();
+			}
+			catch (ExceptionUDT eudt)
+			{
+				//Connection Broken--- no more data
+				if (eudt.errorUDT.code == 2001 )
+				{
+					return skipSofar ;
+					
+				}
+			}
 		}
 
 		packIdx += (int) lenRemaining;
@@ -106,9 +177,25 @@ public class UDTInputStream extends InputStream {
 
 	/****************** receiving more data ******************/
 	private void receive() throws IOException {
-		int received = dsock.receive(ddata);
-		packIdx = 0;
-		packSize = received;
+		int received = -1; 
+		try 
+		{
+			received = dsock.receive(ddata);
+			packIdx = 0;
+			packSize = received;
+		}
+		catch (ExceptionUDT eudt)
+		{
+			//Connection Broken--- no more data
+			if (eudt.errorUDT.code == 2001 )
+			{
+				packIdx = 0;
+				packSize = 0;
+			}
+			
+			throw eudt; 
+		}
+		
 	}
 
 	/********* marking and reseting are unsupported ********/
