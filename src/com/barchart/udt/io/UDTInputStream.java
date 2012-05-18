@@ -67,6 +67,9 @@ public class UDTInputStream extends InputStream {
 					return -1;
 					
 				}
+				else {
+					throw eudt;
+				}
 			}
 		}
 
@@ -92,6 +95,9 @@ public class UDTInputStream extends InputStream {
 				{
 					return -1;
 					
+				}
+				else {
+					throw eudt;
 				}
 			}
 			
@@ -121,6 +127,9 @@ public class UDTInputStream extends InputStream {
 					return readSofar ;
 					
 				}
+				else {
+					throw eudt;
+				}
 			}
 			
 		}
@@ -147,6 +156,9 @@ public class UDTInputStream extends InputStream {
 					return 0;
 					
 				}
+				else {
+					throw eudt;
+				}
 			}
 		}
 
@@ -167,6 +179,9 @@ public class UDTInputStream extends InputStream {
 				{
 					return skipSofar ;
 					
+				}
+				else {
+					throw eudt;
 				}
 			}
 		}
