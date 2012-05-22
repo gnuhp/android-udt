@@ -143,6 +143,7 @@ uint64_t CTimer::readCPUFrequency()
       else
          return 1;
    #elif IA32 || IA64 || AMD64
+
       uint64_t t1, t2;
 
       rdtsc(t1);

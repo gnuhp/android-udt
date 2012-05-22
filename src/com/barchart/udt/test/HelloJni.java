@@ -15,6 +15,7 @@
  */
 package com.barchart.udt.test;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -42,6 +43,7 @@ public class HelloJni extends Activity
 
 	private SocketUDT sockdscp = null;
 	private String Cameraip,Cameraport,  Session_key,Channel_id;
+	private int udtLocalPort;
 	
 	private boolean getCameraInfoFromServer() throws IOException
 	{
@@ -49,6 +51,7 @@ public class HelloJni extends Activity
 
 		String Server_IP = "107.21.243.7";
 		int UDt_Server_Port=7000;
+		 
 
 		DataInputStream  dataIn = null; 
 		String Output = null;
@@ -59,18 +62,22 @@ public class HelloJni extends Activity
 		InetSocketAddress UDT_Server_Addr = null;
 
 		String  channelID = "123456789012";                      
-		String  macAddress = "000EA3070A55";//"000EA3070AC9";  //macaddress of camera  
+		String  macAddress = "000DA3121372";//"000EA3070AC9";  //macaddress of camera  
 		UDT_server_IP = InetAddress.getByName(Server_IP);
 
+		
+		
+		
 		socket = new SocketUDT(TypeUDT.STREAM);
 
 		UDT_Server_Addr = new InetSocketAddress(UDT_server_IP, UDt_Server_Port);
 
 		socket.connect(UDT_Server_Addr);
+		udtLocalPort = socket.getLocalInetPort();
 
 		String message = macAddress + ":" + channelID;
-		Log.d("mbp","Sending the camera details to the server:" + message);
-
+		Log.d("mbp","Sending the camera details to the server:" + message + " from local port:" +udtLocalPort );
+		
 		socket.send(message.getBytes());
 
 		//socket.receive(recvData);
@@ -87,19 +94,19 @@ public class HelloJni extends Activity
 		Log.d("mbp","read bytearr After skip 300: "+ Output);*/
 		
 		
-		/*TEST READLINE 
+		/*TEST READLINE */
 		dataIn = new DataInputStream(socket.getUDTInputStream());
 		Output = dataIn.readLine(); 
 		Log.d("mbp","readline: Output: "+ Output);
-		*/
 		
-		/*TEST read byte array*/
+		
+		/*TEST read byte array/
 		byte[] recvData = new byte[1000];
 		dataIn = new DataInputStream(socket.getUDTInputStream());
 		dataIn.read(recvData);
 		Output = new String(recvData);	
 		Log.d("mbp","read bytearr: Output: "+ Output);
-			/**/	
+			*/	
 
 		socket.close();
 
@@ -182,6 +189,7 @@ public class HelloJni extends Activity
 		InetAddress cameraIPAddress = null;
 		
 		
+		
 		try {
 			cameraIPAddress = InetAddress.getByName(Cameraip);
 		} catch (UnknownHostException e) {
@@ -204,42 +212,68 @@ public class HelloJni extends Activity
 		msg = "action=appletvastream&remote_session=" + Session_key; //+"&channelID="+channelID;
 
 		InetSocketAddress CamInetAddress = new InetSocketAddress(cameraIPAddress.getHostName(), port);
+		InetSocketAddress myOwnAddr = new InetSocketAddress(udtLocalPort);
+		
+		Log.d("mbp","local port" +udtLocalPort );
 		try {
 			sockdscp = new SocketUDT(TypeUDT.STREAM);
-			Log.d("mbp","UDT 01 ");
-			sockdscp.setReceiveBufferSize(90000);
-			Log.d("mbp","UDT 02 ");
+			sockdscp.bind(myOwnAddr);
 			sockdscp.connect(CamInetAddress);
-			Log.d("mbp","UDT 03 ");
+			Log.d("mbp","UDT Connected to camera ..  send session key to camera");
 			data1 = msg.getBytes();
 			sockdscp.send(data1);
 			
+			Log.d("mbp","sending done"); 
+			
 		} catch (ExceptionUDT e) {
 			e.printStackTrace();
+			if (sockdscp!= null)
+				try {
+					sockdscp.close();
+				} catch (ExceptionUDT e1) {
+				}
+			
 		}
+	
 		
-		new Thread()
+		DataInputStream dis ;
+		
+		if(!sockdscp.isClosed())
 		{
-			public void run()
+			Log.d("mbp","Reading data from camera ---------------------->"); 
+			dis = new DataInputStream(
+					new BufferedInputStream(sockdscp.getUDTInputStream()));
+		
+		
+			byte [] data = new byte[16*1024]; 
+			int rest = -1; 
+			int numReadTime = 10; 
+			String aa; 
+			while (numReadTime -- > 0)
 			{
 				try {
-					Thread.sleep(5000);
+					//rest = dis.read(data);
+					aa = dis.readLine();
+					Log.d("mbp","read: " + aa);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				try {
+					Thread.sleep(1000);
 				} catch (InterruptedException e) {
-				} 
-				
-				runOnUiThread(new Runnable() {
-					
-					@Override
-					public void run() {
-						try {
-							sockdscp.close();
-						} catch (ExceptionUDT e) {
-							e.printStackTrace();
-						}
-					}
-				});
+				}
 			}
-		}.start();
+			
+			
+			try {
+				sockdscp.close();
+			} catch (ExceptionUDT e) {
+			} 
+		}
+		Log.d("mbp","UDT 03 ");
+		
+		
+	
 	}
 
 

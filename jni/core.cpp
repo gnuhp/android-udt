@@ -590,6 +590,7 @@ void CUDT::connect(const sockaddr* serv_addr)
    response.pack(0, NULL, resdata, m_iPayloadSize);
 
    uint64_t timeo = 3000000;
+   //uint64_t timeo = 10000000;
    if (m_bRendezvous)
       timeo *= 10;
    uint64_t entertime = CTimer::getTime();

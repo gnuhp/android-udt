@@ -17,8 +17,8 @@ import com.barchart.udt.SocketUDT;
 
 public class UDTInputStream extends InputStream {
 
-	//private static final int PACKET_BUFFER_SIZE = 16*1024;
-	private static final int PACKET_BUFFER_SIZE = 64;
+	private static final int PACKET_BUFFER_SIZE = 16*1024;
+	//private static final int PACKET_BUFFER_SIZE = 64;
 
 	private SocketUDT dsock = null;
 	
@@ -49,8 +49,15 @@ public class UDTInputStream extends InputStream {
 	}
 	
 	/****** reading, skipping and checking available data ******/
-	public int available() throws IOException {
-		return packSize - packIdx;
+	public int available()  {
+		if ( (packSize - packIdx) >=0)
+		{
+			return packSize - packIdx;
+		}
+		else
+		{
+			return 0 ;
+		}
 	}
 
 	public int read() throws IOException {
