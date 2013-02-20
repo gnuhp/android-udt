@@ -330,6 +330,8 @@ int X_ConvertInetSocketAddressToSockaddr(JNIEnv* env,
 
 }
 
+void UDT_ThrowExceptionUDT_Message(JNIEnv* env, const jint socketID,
+		const char *comment) ;
 // NOTE: ipv4 only
 int X_ConvertSockaddrToInetSocketAddress(JNIEnv* env, sockaddr* sockAddr,
 		jobject objInetSocketAddress) {
@@ -338,7 +340,9 @@ int X_ConvertSockaddrToInetSocketAddress(JNIEnv* env, sockaddr* sockAddr,
 	CHK_NUL_RET_ERR(sockAddr,"sockAddr");
 	CHK_NUL_RET_ERR(objInetSocketAddress,"objInetSocketAddress");
 
-    
+    UDT_ThrowExceptionUDT_Message(env, 0xdeadbeef,
+				"API NOT SUPPORTED.. ");
+
     /*20120417: phung: no need to port as this method is not called anywhere 
 
 
@@ -1443,7 +1447,6 @@ JNIEXPORT jint JNICALL Java_com_barchart_udt_SocketUDT_send0(JNIEnv *env,
 
 	// printf("native: udt-send0\n");
 
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "JNI send 01");
 	UNUSED(self);
 
 	jboolean isCopy; // whether JVM returned reference or copy
@@ -1456,7 +1459,6 @@ JNIEXPORT jint JNICALL Java_com_barchart_udt_SocketUDT_send0(JNIEnv *env,
 	case SOCK_STREAM:
 		// printf("native: udt-send0; SOCK_STREAM; socketID=%d\n", socketID);
 
-        __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "JNI send sockID: %d",socketID );
 		rv = UDT::send(socketID, (char*) data, (int) size, 0);
 		break;
 	case SOCK_DGRAM:

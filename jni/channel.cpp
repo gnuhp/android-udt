@@ -95,8 +95,8 @@ void CChannel::open(const sockaddr* addr)
    // construct an socket
    m_iSocket = socket(m_iIPversion, SOCK_DGRAM, 0);
    //m_iSocket = socket(m_iIPversion, SOCK_DGRAM, IPPROTO_UDP);
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CChannel::open: m_iSocket: %d", m_iSocket);
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CChannel::open: (addr==NULL)= %d", (addr == NULL));
+   //__android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CChannel::open: m_iSocket: %d", m_iSocket);
+   // __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CChannel::open: (addr==NULL)= %d", (addr == NULL));
    #ifdef WIN32
       if (INVALID_SOCKET == m_iSocket)
    #else
@@ -135,7 +135,6 @@ void CChannel::open(const sockaddr* addr)
 
    setUDPSockOpt();
 
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CChannel::open: END");
 }
 
 void CChannel::open(UDPSOCKET udpsock)
@@ -170,7 +169,6 @@ void CChannel::setUDPSockOpt()
       tv.tv_usec = 100;
    #endif
 
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CChannel::setsockopt: tv_usec=%d", (int)tv.tv_usec);
 
    #ifdef UNIX
       // Set non-blocking I/O
@@ -184,7 +182,6 @@ void CChannel::setUDPSockOpt()
          throw CUDTException(1, 3, NET_ERROR);
    #else
 
-       __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CChannel::setsockopt set recving timeout");
       // Set receiving time-out value
       if (0 != setsockopt(m_iSocket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(timeval)))
          throw CUDTException(1, 3, NET_ERROR);

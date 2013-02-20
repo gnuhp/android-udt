@@ -326,8 +326,6 @@ public class SocketUDT {
 		synchronized (SocketUDT.class) {
 			if (isOpen()) {
 				close0();
-				Log.e("udt","closed socketID={}  " +socketID);
-				
 			}
 		}
 	}
@@ -990,8 +988,6 @@ public class SocketUDT {
 	 *            UDT socket type
 	 */
 	public SocketUDT(final TypeUDT type) throws ExceptionUDT {
-		
-		Log.d("udt","SocketUDT created ");
 		
 		synchronized (SocketUDT.class) {
 			

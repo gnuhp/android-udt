@@ -466,11 +466,7 @@ CUDT* CUDTUnited::lookup(const UDTSOCKET u)
    CGuard cg(m_ControlLock);
 
    map<UDTSOCKET, CUDTSocket*>::iterator i = m_Sockets.find(u);
-
-
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited: lookup: socket.end():? %d ",
-           (i == m_Sockets.end()));
-
+   
    if ((i == m_Sockets.end()) || (i->second->m_Status == CLOSED))
       throw CUDTException(5, 4, 0);
 
@@ -502,6 +498,7 @@ int CUDTUnited::bind(const UDTSOCKET u, const sockaddr* name, const int& namelen
 {
    CUDTSocket* s = locate(u);
 
+   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::bind01 enter .");
    if (NULL == s)
       throw CUDTException(5, 4, 0);
 
@@ -528,6 +525,7 @@ int CUDTUnited::bind(const UDTSOCKET u, const sockaddr* name, const int& namelen
    // copy address information of local node
    s->m_pUDT->m_pSndQueue->m_pChannel->getSockAddr(s->m_pSelfAddr);
 
+   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::bind01 end.");
    return 0;
 }
 
@@ -535,6 +533,7 @@ int CUDTUnited::bind(UDTSOCKET u, UDPSOCKET udpsock)
 {
    CUDTSocket* s = locate(u);
 
+   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::bind enter .");
    if (NULL == s)
       throw CUDTException(5, 4, 0);
 
@@ -568,6 +567,7 @@ int CUDTUnited::bind(UDTSOCKET u, UDPSOCKET udpsock)
    // copy address information of local node
    s->m_pUDT->m_pSndQueue->m_pChannel->getSockAddr(s->m_pSelfAddr);
 
+   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::bind end.");
    return 0;
 }
 
@@ -762,16 +762,10 @@ int CUDTUnited::connect(const UDTSOCKET u, const sockaddr* name, const int& name
    // otherwise if connect() fails, the multiplexer cannot be located by garbage collection and will cause leak
 
    s->m_pUDT->m_pSndQueue->m_pChannel->getSockAddr(s->m_pSelfAddr);
-
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::connect --- 00 ");
    CIPAddress::pton(s->m_pSelfAddr, s->m_pUDT->m_piSelfIP, s->m_iIPversion);
-
-
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::connect --- 01 ");
    s->m_pUDT->connect(name);
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::connect --- 02 ");
-
    s->m_Status = CONNECTED;
+
 
    // record peer address
    if (AF_INET == s->m_iIPversion)
@@ -1344,13 +1338,12 @@ void CUDTUnited::updateMux(CUDTSocket* s, const sockaddr* addr, const UDPSOCKET*
 {
    CGuard cg(m_ControlLock);
 
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::updateMux (addr==NULL)?%d (udpsock==NULL)?%d", 
-           (addr==NULL), (udpsock==NULL));
-
+   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::updateMux 01 enter");
    if ((s->m_pUDT->m_bReuseAddr) && (NULL != addr))
    {
       int port = (AF_INET == s->m_pUDT->m_iIPversion) ? ntohs(((sockaddr_in*)addr)->sin_port) : ntohs(((sockaddr_in6*)addr)->sin6_port);
 
+   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::updateMux 01  port:%d", port);
       // find a reusable address
       for (map<int, CMultiplexer>::iterator i = m_mMultiplexer.begin(); i != m_mMultiplexer.end(); ++ i)
       {
@@ -1363,12 +1356,14 @@ void CUDTUnited::updateMux(CUDTSocket* s, const sockaddr* addr, const UDPSOCKET*
                s->m_pUDT->m_pSndQueue = i->second.m_pSndQueue;
                s->m_pUDT->m_pRcvQueue = i->second.m_pRcvQueue;
                s->m_iMuxID = i->second.m_iID;
+               __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::updateMux 01 resuse found -return");
                return;
             }
          }
       }
    }
 
+   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::updateMux 01, can't re-use, create new");
    // a new multiplexer is needed
    CMultiplexer m;
    m.m_iMSS = s->m_pUDT->m_iMSS;
@@ -1418,7 +1413,6 @@ void CUDTUnited::updateMux(CUDTSocket* s, const sockaddr* addr, const UDPSOCKET*
    s->m_pUDT->m_pSndQueue = m.m_pSndQueue;
    s->m_pUDT->m_pRcvQueue = m.m_pRcvQueue;
    s->m_iMuxID = m.m_iID;
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::updateMux end");
 
 }
 
@@ -1426,7 +1420,10 @@ void CUDTUnited::updateMux(CUDTSocket* s, const CUDTSocket* ls)
 {
    CGuard cg(m_ControlLock);
 
+
    int port = (AF_INET == ls->m_iIPversion) ? ntohs(((sockaddr_in*)ls->m_pSelfAddr)->sin_port) : ntohs(((sockaddr_in6*)ls->m_pSelfAddr)->sin6_port);
+   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited::updateMux enter port:%d", port);
+
 
    // find the listener's address
    for (map<int, CMultiplexer>::iterator i = m_mMultiplexer.begin(); i != m_mMultiplexer.end(); ++ i)
@@ -1438,9 +1435,13 @@ void CUDTUnited::updateMux(CUDTSocket* s, const CUDTSocket* ls)
          s->m_pUDT->m_pSndQueue = i->second.m_pSndQueue;
          s->m_pUDT->m_pRcvQueue = i->second.m_pRcvQueue;
          s->m_iMuxID = i->second.m_iID;
+         __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited:updateMux found:  ");
+
          return;
       }
    }
+   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDTUnited:updateMux could not find listener's address");
+
 }
 
 #ifndef WIN32
@@ -1774,12 +1775,10 @@ int CUDT::setsockopt(UDTSOCKET u, int, UDTOpt optname, const void* optval, int o
 int CUDT::send(UDTSOCKET u, const char* buf, int len, int)
 {
 
-   __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDT:: send 01");
    try
    {
       CUDT* udt = s_UDTUnited.lookup(u);
 
-      __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDT:: send 02");
       return udt->send((char*)buf, len);
    }
    catch (CUDTException e)

@@ -94,6 +94,7 @@ public class UDTInputStream extends InputStream {
 			try 
 			{
 				receive();
+				
 			}
 			catch (ExceptionUDT eudt)
 			{
@@ -212,6 +213,7 @@ public class UDTInputStream extends InputStream {
 			if (eudt.errorUDT.code == 2001 )
 			{
 				packIdx = 0;
+			   
 				packSize = 0;
 			}
 			

@@ -687,7 +687,7 @@ void CUDT::connect(const sockaddr* serv_addr)
           __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "CUDT::connect timeout: now:%ld enter:%ld timeout:%ld cpufreq:%ld",
                  CTimer::getTime(), entertime, timeo, 
                  CTimer::getCPUFrequency());
-            
+           
          e = CUDTException(1, 1, 0);
          break;
       }
@@ -1067,7 +1067,6 @@ int CUDT::send(const char* data, const int& len)
       s_UDTUnited.m_EPoll.disable_write(m_SocketID, m_sPollID);
    }
 
-  // __android_log_print(ANDROID_LOG_VERBOSE, APPNAME, "send 06: return:%d", size);
    return size;
 }
 
